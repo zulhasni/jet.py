@@ -1,135 +1,221 @@
-import os  
-import turtle  
-   
-# First, we will create screen  
-screen_1 = turtle.Screen()  
-screen_1.title("Ping-Pong Game")  
-screen_1.bgcolor("Yellow")  
-screen_1.setup(width = 1050, height = 650)  
-   
-   
-# Left paddle  
-left_paddle = turtle.Turtle()  
-left_paddle.speed(0)  
-left_paddle.shape("square")  
-left_paddle.color("Red")  
-left_paddle.shapesize(stretch_wid = 6, stretch_len = 2)  
-left_paddle.penup()  
-left_paddle.goto(-400, 0)  
-   
-   
-# Right paddle  
-right_paddle = turtle.Turtle()  
-right_paddle.speed(0)  
-right_paddle.shape("square")  
-right_paddle.color("Blue")  
-right_paddle.shapesize(stretch_wid = 6, stretch_len = 2)  
-right_paddle.penup()  
-right_paddle.goto(400, 0)  
-   
-   
-# Ball of circle shape  
-hit_ball = turtle.Turtle()  
-hit_ball.speed(45)  
-hit_ball.shape("circle")  
-hit_ball.color("Black")  
-hit_ball.penup()  
-hit_ball.goto(0, 0)  
-hit_ball.dx = 5  
-hit_ball.dy = -5  
-   
-   
-# Now, we will initialize the score  
-left_player = 0  
-right_player = 0  
-   
-   
-# Displaying of the score  
-sketch_1 = turtle.Turtle()  
-sketch_1.speed(0)  
-sketch_1.color("blue")  
-sketch_1.penup()  
-sketch_1.hideturtle()  
-sketch_1.goto(0, 260)  
-sketch_1.write("Left Player : 0    Right Player: 0",  
-             align = "center", font = ("Courier", 24, "normal"))  
-   
-   
-# Implementing the functions for moving paddle vertically  
-def paddle_L_up():  
-    y = left_paddle.ycor()  
-    y += 20  
-    left_paddle.sety(y)  
-   
-   
-def paddle_L_down():  
-    y = left_paddle.ycor()  
-    y -= 20  
-    left_paddle.sety(y)  
-   
-   
-def paddle_R_up():  
-    y = right_paddle.ycor()  
-    y += 20  
-    right_paddle.sety(y)  
-   
-   
-def paddle_R_down():  
-    y = right_paddle.ycor()  
-    y -= 20  
-    right_paddle.sety(y)  
-   
-   
-# Then, binding the keys for moving the paddles up and down.   
-screen_1.listen()  
-screen_1.onkeypress(paddle_L_up, "r")  
-screen_1.onkeypress(paddle_L_down, "c")  
-screen_1.onkeypress(paddle_R_up, "Up")  
-screen_1.onkeypress(paddle_R_down, "Down")  
-   
-   
-while True:  
-    screen_1.update()  
-   
-    hit_ball.setx(hit_ball.xcor() + hit_ball.dx)  
-    hit_ball.sety(hit_ball.ycor() + hit_ball.dy)  
-   
-    # Check all the borders  
-    if hit_ball.ycor() > 280:  
-        hit_ball.sety(280)  
-        hit_ball.dy *= -1  
-   
-    if hit_ball.ycor() < -280:  
-        hit_ball.sety(-280)  
-        hit_ball.dy *= -1  
-   
-    if hit_ball.xcor() > 500:  
-        hit_ball.goto(0, 0)  
-        hit_ball.dy *= -1  
-        left_player += 1  
-        sketch_1.clear()  
-        sketch_1.write("Left_player : {}    Right_player: {}".format(  
-                      left_player, right_player), align = "center",  
-                      font = ("Courier", 24, "normal"))  
-   
-    if hit_ball.xcor() < -500:  
-        hit_ball.goto(0, 0)  
-        hit_ball.dy *= -1  
-        right_player += 1  
-        sketch_1.clear()  
-        sketch_1.write("Left_player : {}    Right_player: {}".format(  
-                                 left_player, right_player), align = "center",  
-                                 font = ("Courier", 24, "normal"))  
-   
-    # Collision of ball and paddles  
-    if (hit_ball.xcor() > 360 and  
-                        hit_ball.xcor() < 370) and (hit_ball.ycor() < right_paddle.ycor() + 40 and  
-                        hit_ball.ycor() > right_paddle.ycor() - 40):  
-                        hit_ball.setx(360)  
-                        hit_ball.dx *= -1  
-          
-    if (hit_ball.xcor() < -360 and  
-                       hit_ball.xcor() > -370) and (hit_ball.ycor() < left_paddle.ycor() + 40 and  
-                       hit_ball.ycor() > left_paddle.ycor() - 40):  
-                       hit_ball.setx(-360)  
-                       hit_ball.dx *= -1
+# Import the pygame module
+# Import random for random numbers
+import random
+
+import pygame
+
+# Import pygame.locals for easier access to key coordinates
+# Updated to conform to flake8 and black standards
+# from pygame.locals import *
+from pygame.locals import (
+    K_DOWN,
+    K_ESCAPE,
+    K_LEFT,
+    K_RIGHT,
+    K_UP,
+    KEYDOWN,
+    QUIT,
+    RLEACCEL,
+)
+
+# Define constants for the screen width and height
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+
+
+# Define the Player object extending pygame.sprite.Sprite
+# Instead of a surface, we use an image for a better looking sprite
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Player, self).__init__()
+        self.surf = pygame.image.load("jet.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect()
+
+    # Move the sprite based on keypresses
+    def update(self, pressed_keys):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, -5)
+            move_up_sound.play()
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, 5)
+            move_down_sound.play()
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(-5, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(5, 0)
+
+        # Keep player on the screen
+        if self.rect.left < 0:
+            self.rect.left = 0
+        elif self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        elif self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+
+
+# Define the enemy object extending pygame.sprite.Sprite
+# Instead of a surface, we use an image for a better looking sprite
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Enemy, self).__init__()
+        self.surf = pygame.image.load("missile.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        # The starting position is randomly generated, as is the speed
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            )
+        )
+        self.speed = random.randint(5, 20)
+
+    # Move the enemy based on speed
+    # Remove it when it passes the left edge of the screen
+    def update(self):
+        self.rect.move_ip(-self.speed, 0)
+        if self.rect.right < 0:
+            self.kill()
+
+
+# Define the cloud object extending pygame.sprite.Sprite
+# Use an image for a better looking sprite
+class Cloud(pygame.sprite.Sprite):
+    def __init__(self):
+        super(Cloud, self).__init__()
+        self.surf = pygame.image.load("cloud.png").convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+        # The starting position is randomly generated
+        self.rect = self.surf.get_rect(
+            center=(
+                random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                random.randint(0, SCREEN_HEIGHT),
+            )
+        )
+
+    # Move the cloud based on a constant speed
+    # Remove it when it passes the left edge of the screen
+    def update(self):
+        self.rect.move_ip(-5, 0)
+        if self.rect.right < 0:
+            self.kill()
+
+
+# Setup for sounds, defaults are good
+pygame.mixer.init()
+
+# Initialize pygame
+pygame.init()
+
+# Setup the clock for a decent framerate
+clock = pygame.time.Clock()
+
+# Create the screen object
+# The size is determined by the constant SCREEN_WIDTH and SCREEN_HEIGHT
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Create custom events for adding a new enemy and cloud
+ADDENEMY = pygame.USEREVENT + 1
+pygame.time.set_timer(ADDENEMY, 250)
+ADDCLOUD = pygame.USEREVENT + 2
+pygame.time.set_timer(ADDCLOUD, 1000)
+
+# Create our 'player'
+player = Player()
+
+# Create groups to hold enemy sprites, cloud sprites, and all sprites
+# - enemies is used for collision detection and position updates
+# - clouds is used for position updates
+# - all_sprites isused for rendering
+enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+
+# Load and play our background music
+# Sound source: http://ccmixter.org/files/Apoxode/59262
+# License: https://creativecommons.org/licenses/by/3.0/
+pygame.mixer.music.load("Apoxode_-_Electric_1.mp3")
+pygame.mixer.music.play(loops=-1)
+
+# Load all our sound files
+# Sound sources: Jon Fincher
+move_up_sound = pygame.mixer.Sound("Rising_putter.ogg")
+move_down_sound = pygame.mixer.Sound("Falling_putter.ogg")
+collision_sound = pygame.mixer.Sound("Collision.ogg")
+
+# Set the base volume for all sounds
+move_up_sound.set_volume(0.5)
+move_down_sound.set_volume(0.5)
+collision_sound.set_volume(0.5)
+
+# Variable to keep our main loop running
+running = True
+ 
+#Our main loop
+while running:
+    # Look at every event in the queue
+    for event in pygame.event.get():
+        # Did the user hit a key?
+        if event.type == KEYDOWN:
+            # Was it the Escape key? If so, stop the loop
+            if event.key == K_ESCAPE:
+                running = False
+
+        # Did the user click the window close button? If so, stop the loop
+        elif event.type == QUIT:
+            running = False
+
+        # Should we add a new enemy?
+        elif event.type == ADDENEMY:
+            # Create the new enemy, and add it to our sprite groups
+            new_enemy = Enemy()
+            enemies.add(new_enemy)
+            all_sprites.add(new_enemy)
+
+        # Should we add a new cloud?
+        elif event.type == ADDCLOUD:
+            # Create the new cloud, and add it to our sprite groups
+            new_cloud = Cloud()
+            clouds.add(new_cloud)
+            all_sprites.add(new_cloud)
+
+    # Get the set of keys pressed and check for user input
+    pressed_keys = pygame.key.get_pressed()
+    player.update(pressed_keys)
+
+    # Update the position of our enemies and clouds
+    enemies.update()
+    clouds.update()
+
+    # Fill the screen with sky blue
+    screen.fill((135, 206, 250))
+
+    # Draw all our sprites
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
+
+    # Check if any enemies have collided with the player
+    if pygame.sprite.spritecollideany(player, enemies):
+        # If so, remove the player
+        player.kill()
+
+        # Stop any moving sounds and play the collision sound
+        move_up_sound.stop()
+        move_down_sound.stop()
+        collision_sound.play()
+
+        # Stop the loop
+        running = False
+
+    # Flip everything to the display
+    pygame.display.flip()
+
+    # Ensure we maintain a 30 frames per second rate
+    clock.tick(30)
+
+# At this point, we're done, so we can stop and quit the mixer
+pygame.mixer.music.stop()
+pygame.mixer.quit()
